@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Cadastro de Tarefa</title>
+
+<style>
+body {
+  font-family: "Segoe UI";
+  background: #f4f4f4;
+}
+
+.container {
+  width: 400px;
+  margin: 50px auto;
+  background: #fff;
+  padding: 20px;
+  border-radius: 10px;
+}
+
+h1 {
+  background: #0056b3;
+  color: white;
+  padding: 10px;
+}
+
+input, select, button {
+  width: 100%;
+  padding: 10px;
+  margin-top: 10px;
+}
+
+button {
+  background: #0056b3;
+  color: white;
+  border: none;
+}
+
+button:hover {
+  background: #003d80;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+  <h1>Cadastrar Tarefa</h1>
+
+  <select id="usuario"></select>
+
+  <input type="text" id="descricao" placeholder="Descrição">
+  <input type="text" id="setor" placeholder="Setor">
+
+  <select id="prioridade">
+    <option value="">Prioridade</option>
+    <option>Baixa</option>
+    <option>Média</option>
+    <option>Alta</option>
+  </select>
+
+  <button onclick="cadastrar()">Cadastrar</button>
+
+  <p id="msg"></p>
+</div>
+
+<script>
+// carregar usuários
+fetch("/usuarios")
+.then(res => res.json())
+.then(usuarios => {
+  const select = document.getElementById("usuario");
+
+  usuarios.forEach(u => {
+    const opt = document.createElement("option");
+    opt.value = u.id;
+    opt.text = u.nome;
+    select.appendChild(opt);
+  });
+});
+
+function cadastrar() {
+  const usuario_id = document.getElementById("usuario").value;
+  const descricao = document.getElementById("descricao").value;
+  const setor = document.getElementById("setor").value;
+  const prioridade = document.getElementById("prioridade").value;
+
+  if (!usuario_id || !descricao || !setor || !prioridade) {
+    return alert("Preencha todos os campos!");
+  }
+
+  fetch("/tarefas", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      usuario_id,
+      descricao,
+      setor,
+      prioridade
+    })
+  })
+  .then(res => res.text())
+  .then(msg => {
+    document.getElementById("msg").innerText = msg;
+  });
+}
+</script>
+
+</body>
+</html>

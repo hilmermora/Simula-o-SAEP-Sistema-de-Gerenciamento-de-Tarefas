@@ -1,0 +1,138 @@
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Cadastro de Usuário</title>
+
+<style>
+body {
+  font-family: "Segoe UI";
+  background: #f4f4f4;
+}
+
+.container {
+  width: 400px;
+  margin: 50px auto;
+  background: #fff;
+  padding: 20px;
+  border-radius: 10px;
+}
+
+h1 {
+  background: #0056b3;
+  color: #fff;
+  padding: 10px;
+}
+
+input, button {
+  width: 100%;
+  padding: 10px;
+  margin-top: 10px;
+}
+
+button {
+  background: #0056b3;
+  color: white;
+  border: none;
+  cursor: pointer;
+}
+
+button:hover {
+  background: #003d80;
+}
+
+#msg {
+  margin-top: 15px;
+  padding: 10px;
+  border-radius: 5px;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+#msg.show {
+  opacity: 1;
+}
+
+input:invalid {
+  border-color: red;
+}
+
+input:valid {
+  border-color: green;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+  <h1>Cadastrar Usuário</h1>
+
+
+  <input type="text" id="nome" placeholder="Nome" required>
+  <input type="email" id="email" placeholder="Email" required>
+
+
+<button id="cadastrarBtn" onclick="cadastrar()">Cadastrar</button>
+
+<p id="msg"></p>
+
+
+</div>
+
+<script>
+function cadastrar() {
+  const nome = document.getElementById("nome").value.trim();
+  const email = document.getElementById("email").value.trim();
+  const msgEl = document.getElementById("msg");
+  const btn = document.getElementById("cadastrarBtn");
+
+  if (!nome || !email) {
+    msgEl.textContent = "Preencha todos os campos!";
+    msgEl.style.color = "red";
+    msgEl.classList.add("show");
+    setTimeout(() => msgEl.classList.remove("show"), 3000);
+    return;
+  }
+
+  btn.textContent = "Cadastrando...";
+  btn.disabled = true;
+  msgEl.textContent = "";
+
+  fetch("/usuarios", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({ nome, email })
+  })
+  .then(res => {
+    if (!res.ok) {
+      return res.text().then(text => { throw new Error(text); });
+    }
+    return res.text();
+  })
+  .then(msg => {
+    msgEl.textContent = msg;
+    msgEl.style.color = "green";
+    msgEl.classList.add("show");
+    setTimeout(() => msgEl.classList.remove("show"), 5000);
+    document.getElementById("nome").value = "";
+    document.getElementById("email").value = "";
+  })
+  .catch(err => {
+    msgEl.textContent = err.message || "Erro ao cadastrar usuário";
+    msgEl.style.color = "red";
+    msgEl.classList.add("show");
+    setTimeout(() => msgEl.classList.remove("show"), 5000);
+  })
+  .finally(() => {
+    btn.textContent = "Cadastrar";
+    btn.disabled = false;
+  });
+}
+</script>
+
+</body>
+</html>

@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Gerenciador de Tarefas</title>
+
+<style>
+body {
+  font-family: "Segoe UI";
+  margin: 0;
+  background: #f4f4f4;
+}
+
+/* TOPO */
+.header {
+  background: #0056b3;
+  color: white;
+  padding: 15px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.header a {
+  color: white;
+  text-decoration: none;
+  margin-left: 15px;
+  font-weight: bold;
+}
+
+/* CONTAINER */
+.container {
+  display: flex;
+  gap: 20px;
+  padding: 20px;
+}
+
+/* COLUNAS */
+.coluna {
+  flex: 1;
+  background: white;
+  border-radius: 10px;
+  padding: 10px;
+}
+
+.coluna h2 {
+  background: #0056b3;
+  color: white;
+  padding: 10px;
+  border-radius: 5px;
+}
+
+/* CARDS */
+.card {
+  background: #eee;
+  padding: 10px;
+  margin-top: 10px;
+  border-radius: 8px;
+}
+
+.card b {
+  display: block;
+}
+
+/* BOTÕES */
+button {
+  margin-top: 5px;
+  margin-right: 5px;
+  padding: 5px;
+  border: none;
+  cursor: pointer;
+  border-radius: 5px;
+}
+
+.btn-fazendo {
+  background: orange;
+  color: white;
+}
+
+.btn-pronto {
+  background: green;
+  color: white;
+}
+
+.btn-delete {
+  background: red;
+  color: white;
+}
+
+button:hover {
+  opacity: 0.8;
+}
+</style>
+</head>
+
+<body>
+
+<!-- TOPO -->
+<div class="header">
+  <h1>Kanban de Tarefas</h1>
+
+  <div>
+    <a href="usuarios.html">+ Usuário</a>
+    <a href="tarefas.html">+ Tarefa</a>
+  </div>
+</div>
+
+<!-- KANBAN -->
+<div class="container">
+
+  <div class="coluna" id="afazer">
+    <h2>A Fazer</h2>
+  </div>
+
+  <div class="coluna" id="fazendo">
+    <h2>Fazendo</h2>
+  </div>
+
+  <div class="coluna" id="pronto">
+    <h2>Pronto</h2>
+  </div>
+
+</div>
+
+<script>
+carregarTarefas();
+
+function carregarTarefas() {
+  fetch("/tarefas")
+  .then(res => res.json())
+  .then(tarefas => {
+    if (tarefas && Array.isArray(tarefas)) {
+      tarefas.forEach(t => {
+        const card = document.createElement("div");
+        card.className = "card";
+
+        card.innerHTML = `
+          <b>${t.descricao}</b>
+          <small>Usuário: ${t.nome}</small><br>
+          <small>Setor: ${t.setor}</small><br>
+          <small>Prioridade: ${t.prioridade}</small><br><br>
+
+          <button class="btn-fazendo" onclick="mudar(${t.id}, 'Fazendo')">Fazendo</button>
+          <button class="btn-pronto" onclick="mudar(${t.id}, 'Pronto')">Pronto</button>
+          <button class="btn-delete" onclick="excluir(${t.id})">Excluir</button>
+        `;
+
+        if (t.status === "A Fazer") {
+          document.getElementById("afazer").appendChild(card);
+        } else if (t.status === "Fazendo") {
+          document.getElementById("fazendo").appendChild(card);
+        } else {
+          document.getElementById("pronto").appendChild(card);
+        }
+      });
+    }
+  }).catch(err => console.error('Erro ao carregar tarefas:', err));
+}
+
+function mudar(id, status) {
+  fetch("/tarefas/" + id, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ status })
+  }).then(() => location.reload());
+}
+
+function excluir(id) {
+  if (confirm("Deseja excluir essa tarefa?")) {
+    fetch("/tarefas/" + id, {
+      method: "DELETE"
+    }).then(() => location.reload());
+  }
+}
+</script>
+
+</body>
+</html>
