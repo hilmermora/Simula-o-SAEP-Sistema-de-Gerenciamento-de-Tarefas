@@ -36,3 +36,24 @@ exports.atualizarStatus = async (id, status) => {
 exports.deletarTarefa = async (id) => {
   return db.query("DELETE FROM tarefas WHERE id = $1", [id]);
 };
+
+exports.atualizarTarefa = async (id, dados) => {
+  const sql = `
+    UPDATE tarefas 
+    SET 
+      usuario_id = $1,
+      descricao = $2,
+      setor = $3,
+      prioridade = $4,
+      status = $5
+    WHERE id = $6
+  `;
+  return db.query(sql, [
+    dados.usuario_id,
+    dados.descricao,
+    dados.setor,
+    dados.prioridade,
+    dados.status,
+    id
+  ]);
+};

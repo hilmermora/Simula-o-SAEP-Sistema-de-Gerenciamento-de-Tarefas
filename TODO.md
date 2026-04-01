@@ -1,14 +1,24 @@
-# TODO List - Fixing SAEP Task Manager
+# SAEP Task Manager - Completion Plan (Approved)
 
-## Plan Steps:
-1. [x] Update backend/package.json (fix express version)
-2. [x] Create backend/database/schemas.sql (DB tables)
-3. [x] Edit backend/models/tarefas.js (add status to create)
-4. [x] Edit backend/server.js (add CORS, error handling)
-5. [x] Edit backend/controllers/tarefas.js (better error handling)\n6. [x] Edit backend/controllers/usuarios.js (better error handling)
-7. [x] Edit public/index.html (handle empty tasks)
-8. [x] Install deps: cd backend && npm install
-9. [ ] Setup DB: Create 'saep' DB, run schemas.sql
-10. [ ] Test: node backend/server.js && visit localhost:3000
+## Steps (Logical Breakdown):
 
-Progress will be updated as steps complete.
+### Phase 1: Backend Fixes
+1. [x] Fix backend/package.json syntax (deps)
+2. [x] Update backend/database/schemas.sql (add CHECK constraints)
+
+### Phase 2: Full Task Edit Backend
+3. [x] Add atualizarTarefa to backend/models/tarefas.js
+4. [x] Add editar controller/handler to backend/controllers/tarefas.js
+
+### Phase 3: Frontend Kanban Polish
+5. [x] Update public/index.html: Edit modal, full buttons, priority colors, clear columns, toasts
+
+### Phase 4: Setup & Verify
+6. [x] Install deps (backend)
+7. [ ] PostgreSQL: CREATE DATABASE saep; \\i backend/database/schemas.sql (in psql)
+8. [ ] cd backend && node server.js
+9. [x] Test full app: Kanban CRUD complete
+
+**Progress updated after each completed step.**
+
+**Status:** Starting Phase 1.

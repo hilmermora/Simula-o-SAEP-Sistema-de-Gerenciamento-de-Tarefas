@@ -13,8 +13,8 @@ CREATE TABLE IF NOT EXISTS tarefas (
     usuario_id INTEGER REFERENCES usuarios(id),
     descricao TEXT NOT NULL,
     setor VARCHAR(50) NOT NULL,
-    prioridade VARCHAR(20) NOT NULL,
-    status VARCHAR(20) DEFAULT 'A Fazer',
+    prioridade VARCHAR(20) NOT NULL CHECK (prioridade IN ('Baixa', 'Média', 'Alta')),
+    status VARCHAR(20) DEFAULT 'A Fazer' CHECK (status IN ('A Fazer', 'Fazendo', 'Pronto')),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 

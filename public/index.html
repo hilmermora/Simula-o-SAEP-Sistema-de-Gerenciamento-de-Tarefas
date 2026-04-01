@@ -62,6 +62,16 @@ body {
   display: block;
 }
 
+.prioridade {
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 0.8em;
+  font-weight: bold;
+}
+.prioridade.baixa { background: #d4edda; color: #155724; }
+.prioridade.media { background: #fff3cd; color: #856404; }
+.prioridade.alta { background: #f8d7da; color: #721c24; }
+
 /* BOTÕES */
 button {
   margin-top: 5px;
@@ -72,16 +82,22 @@ button {
   border-radius: 5px;
 }
 
+.btn-afazer {
+  background: #6c757d;
+  color: white;
+}
 .btn-fazendo {
   background: orange;
   color: white;
 }
-
 .btn-pronto {
   background: green;
   color: white;
 }
-
+.btn-edit {
+  background: blue;
+  color: white;
+}
 .btn-delete {
   background: red;
   color: white;
@@ -90,6 +106,49 @@ button {
 button:hover {
   opacity: 0.8;
 }
+
+/* MODAL */
+.modal {
+  display: none;
+  position: fixed;
+  z-index: 1000;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.5);
+}
+.modal-content {
+  background: white;
+  margin: 10% auto;
+  padding: 20px;
+  width: 400px;
+  border-radius: 10px;
+}
+input, select {
+  width: 100%;
+  padding: 8px;
+  margin: 5px 0;
+  box-sizing: border-box;
+}
+
+/* TOAST */
+.toast {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  padding: 15px;
+  color: white;
+  border-radius: 5px;
+  opacity: 0;
+  transition: opacity 0.3s;
+  z-index: 1001;
+}
+.toast.show {
+  opacity: 1;
+}
+.toast.success { background: green; }
+.toast.error { background: red; }
 </style>
 </head>
 
@@ -122,10 +181,115 @@ button:hover {
 
 </div>
 
+<!-- EDIT MODAL -->
+<div id="editModal" class="modal">
+  <div class="modal-content">
+    <h2>Editar Tarefa</h2>
+    <input type="hidden" id="editId">
+    <select id="editUsuario"></select>
+    <input type="text" id="editDescricao" placeholder="Descrição">
+    <input type="text" id="editSetor" placeholder="Setor">
+    <select id="editPrioridade">
+      <option value="Baixa">Baixa</option>
+      <option value="Média">Média</option>
+      <option value="Alta">Alta</option>
+    </select>
+    <select id="editStatus">
+      <option value="A Fazer">A Fazer</option>
+      <option value="Fazendo">Fazendo</option>
+      <option value="Pronto">Pronto</option>
+    </select>
+    <button onclick="salvarEdicao()">Salvar</button>
+    <button onclick="fecharModal()">Cancelar</button>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div id="toast" class="toast"></div>
+
 <script>
+carregarUsuarios();
 carregarTarefas();
 
+function limparColunas() {
+  ['afazer', 'fazendo', 'pronto'].forEach(id => {
+    document.getElementById(id).innerHTML = '<h2>' + document.querySelector('#' + id + ' h2').textContent + '</h2>';
+  });
+}
+
+async function carregarUsuarios() {
+  try {
+    const res = await fetch('/usuarios');
+    window.usuarios = await res.json();
+    carregarUsuariosModal();
+  } catch(e) { console.error(e); }
+}
+
+function carregarUsuariosModal() {
+  const select = document.getElementById('editUsuario');
+  select.innerHTML = '';
+  window.usuarios.forEach(u => {
+    const opt = document.createElement('option');
+    opt.value = u.id;
+    opt.textContent = u.nome;
+    select.appendChild(opt);
+  });
+}
+
+function editar(id, usuario_id, descricao, setor, prioridade, status) {
+  document.getElementById('editId').value = id;
+  document.getElementById('editUsuario').value = usuario_id;
+  document.getElementById('editDescricao').value = descricao;
+  document.getElementById('editSetor').value = setor;
+  document.getElementById('editPrioridade').value = prioridade;
+  document.getElementById('editStatus').value = status;
+  document.getElementById('editModal').style.display = 'block';
+}
+
+function fecharModal() {
+  document.getElementById('editModal').style.display = 'none';
+}
+
+function salvarEdicao() {
+  const id = document.getElementById('editId').value;
+  const dados = {
+    usuario_id: document.getElementById('editUsuario').value,
+    descricao: document.getElementById('editDescricao').value,
+    setor: document.getElementById('editSetor').value,
+    prioridade: document.getElementById('editPrioridade').value,
+    status: document.getElementById('editStatus').value
+  };
+
+  if (!dados.descricao || !dados.setor || !dados.prioridade || !dados.status) {
+    mostrarToast('Preencha todos os campos!', 'error');
+    return;
+  }
+
+  fetch(`/tarefas/${id}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(dados)
+  })
+  .then(res => res.json())
+  .then(data => {
+    if (data.success) {
+      mostrarToast('Tarefa atualizada!', 'success');
+      fecharModal();
+      setTimeout(carregarTarefas, 500);
+    } else {
+      mostrarToast('Erro ao atualizar', 'error');
+    }
+  })
+  .catch(() => mostrarToast('Erro ao atualizar', 'error'));
+}
+
+// Fechar modal clicando fora
+window.onclick = (e) => {
+  if (e.target.classList.contains('modal')) fecharModal();
+}
+
 function carregarTarefas() {
+  limparColunas();
   fetch("/tarefas")
   .then(res => res.json())
   .then(tarefas => {
@@ -134,14 +298,17 @@ function carregarTarefas() {
         const card = document.createElement("div");
         card.className = "card";
 
+        const priClass = t.prioridade.toLowerCase();
         card.innerHTML = `
           <b>${t.descricao}</b>
           <small>Usuário: ${t.nome}</small><br>
           <small>Setor: ${t.setor}</small><br>
-          <small>Prioridade: ${t.prioridade}</small><br><br>
+          <span class="prioridade ${priClass === 'baixa' ? 'baixa' : priClass === 'média' ? 'media' : 'alta'}">${t.prioridade}</span><br><br>
 
+          <button class="btn-afazer" onclick="mudar(${t.id}, 'A Fazer')">A Fazer</button>
           <button class="btn-fazendo" onclick="mudar(${t.id}, 'Fazendo')">Fazendo</button>
           <button class="btn-pronto" onclick="mudar(${t.id}, 'Pronto')">Pronto</button>
+          <button class="btn-edit" onclick="editar(${t.id}, '${t.usuario_id}', '${t.descricao}', '${t.setor}', '${t.prioridade}', '${t.status}')">Editar</button>
           <button class="btn-delete" onclick="excluir(${t.id})">Excluir</button>
         `;
 
@@ -162,14 +329,33 @@ function mudar(id, status) {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ status })
-  }).then(() => location.reload());
+  })
+  .then(res => res.json())
+  .then(data => {
+    if (data.success) mostrarToast('Status atualizado!', 'success');
+    else mostrarToast('Erro ao atualizar status', 'error');
+    setTimeout(carregarTarefas, 1000);
+  })
+  .catch(() => mostrarToast('Erro ao atualizar status', 'error'));
+}
+
+function mostrarToast(msg, type) {
+  const toast = document.getElementById('toast');
+  toast.textContent = msg;
+  toast.className = `toast ${type} show`;
+  setTimeout(() => toast.classList.remove('show'), 3000);
 }
 
 function excluir(id) {
   if (confirm("Deseja excluir essa tarefa?")) {
-    fetch("/tarefas/" + id, {
-      method: "DELETE"
-    }).then(() => location.reload());
+    fetch("/tarefas/" + id, { method: "DELETE" })
+    .then(res => res.json())
+    .then(data => {
+      if (data.success) mostrarToast('Tarefa excluída!', 'success');
+      else mostrarToast('Erro ao excluir', 'error');
+      setTimeout(carregarTarefas, 1000);
+    })
+    .catch(() => mostrarToast('Erro ao excluir', 'error'));
   }
 }
 </script>

@@ -26,13 +26,20 @@ exports.listar = async (req, res) => {
   }
 };
 
-exports.status = async (req, res) => {
+exports.atualizar = async (req, res) => {
+  const id = req.params.id;
+  const dados = req.body;
+
+  if (!dados.descricao || !dados.setor || !dados.prioridade || !dados.status) {
+    return res.status(400).json({ error: "Campos obrigatórios: descricao, setor, prioridade, status" });
+  }
+
   try {
-    await Tarefa.atualizarStatus(req.params.id, req.body.status);
-    res.json({ success: true, message: "Status atualizado" });
+    await Tarefa.atualizarTarefa(id, dados);
+    res.json({ success: true, message: "Tarefa atualizada!" });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: "Erro ao atualizar status" });
+    res.status(500).json({ error: "Erro ao atualizar tarefa" });
   }
 };
 
